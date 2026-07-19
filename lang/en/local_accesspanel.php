@@ -1,0 +1,23 @@
+<?php
+$string['pluginname'] = 'Accessibility Panel';
+$string['opentoolbar'] = 'Open accessibility panel';
+$string['close'] = 'Close';
+$string['welcome'] = 'Hello, {$a}!';
+$string['navigation'] = 'Course navigation';
+$string['nocoursenav'] = 'No course navigation available on this page.';
+$string['reading'] = 'Assisted reading';
+$string['readcontent'] = 'Read content';
+$string['stopreading'] = 'Stop';
+$string['speed'] = 'Speed';
+$string['visualsettings'] = 'Visual settings';
+$string['decreasefont'] = 'Decrease font size';
+$string['resetfont'] = 'Reset font size';
+$string['increasefont'] = 'Increase font size';
+$string['highcontrast'] = 'High contrast';
+$string['dyslexiafont'] = 'Dyslexia-friendly font';
+$string['spacing'] = 'Text spacing';
+$string['summary'] = 'Content summary';
+$string['generatesummary'] = 'Generate summary';
+$string['progress'] = 'Course progress';
+$string['completionnotenabled'] = 'Activity completion tracking is not enabled in this course.';
+$string['privacy:metadata'] = 'The Accessibility Panel plugin does not store personal data on the server; visual preferences are stored in the user\'s browser (localStorage).';
