@@ -1,0 +1,23 @@
+<?php
+$string['pluginname'] = 'Panel de Accesibilidad FARO';
+$string['opentoolbar'] = 'Abrir panel de accesibilidad';
+$string['close'] = 'Cerrar';
+$string['welcome'] = '¡Hola, {$a}!';
+$string['navigation'] = 'Navegación del curso';
+$string['nocoursenav'] = 'No hay navegación de curso disponible en esta página.';
+$string['reading'] = 'Lectura asistida';
+$string['readcontent'] = 'Leer contenido';
+$string['stopreading'] = 'Detener';
+$string['speed'] = 'Velocidad';
+$string['visualsettings'] = 'Ajustes visuales';
+$string['decreasefont'] = 'Disminuir tamaño de letra';
+$string['resetfont'] = 'Restablecer tamaño de letra';
+$string['increasefont'] = 'Aumentar tamaño de letra';
+$string['highcontrast'] = 'Alto contraste';
+$string['dyslexiafont'] = 'Fuente para dislexia';
+$string['spacing'] = 'Espaciado de texto';
+$string['summary'] = 'Resumen de contenido';
+$string['generatesummary'] = 'Generar resumen';
+$string['progress'] = 'Progreso del curso';
+$string['completionnotenabled'] = 'El seguimiento de finalización no está activado en este curso.';
+$string['privacy:metadata'] = 'El plugin Panel de Accesibilidad no almacena datos personales en el servidor; los ajustes visuales se guardan en el navegador del usuario (localStorage).';
