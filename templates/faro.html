@@ -588,12 +588,70 @@
 /* =========================================
    ESTADO GLOBAL Y LÓGICA DE APLICACIÓN CSS
 ========================================= */
+/* =========================================
+   ESTADO GLOBAL
+========================================= */
+
 const faroState = {
-    voz: false, velocidadVoz: 50, volumenVoz: 100,
-    grises: false
+
+    // Lectura
+    voz: false,
+    velocidadVoz: 50,
+    volumenVoz: 100,
+
+    // Texto
+    fuente: "default",        // default | sans | serif | dyslexic
+    tamanoTexto: "normal",    // small | normal | large
+    alineacion: "left",       // left | center | right
+
+    // Visual
+    brillo: 50,
+    contraste: 50,
+    saturacion: 50,
+    grises: false,
+
+    altoContraste: false,
+    modoOscuro: false,
+
+    // Panel
+    posicionBoton: "right",
+
+    // Perfil aplicado
+    perfil: null
+
 };
 
 const FARO_TOUR_KEY = "FARO_TOUR_VISTO";
+
+function aplicarEstado() {
+
+    actualizarFuente();
+
+    actualizarTamanoTexto();
+
+    actualizarAlineacion();
+
+    actualizarFiltros();
+
+    actualizarContraste();
+
+    actualizarModoOscuro();
+
+    actualizarPosicionBoton();
+
+}
+
+const SUBMENUS = [
+
+    "submenuApariencia",
+    "submenuPerfil",
+    "submenuLectura",
+    "submenuAjustes",
+    "submenuAjustesVisuales",
+    "submenuTexto",
+    "submenuTecladoVirtual"
+
+];
 
 function marcarTourComoVisto() {
     localStorage.setItem(FARO_TOUR_KEY, "1");
@@ -651,31 +709,70 @@ function cerrarFaro(){
 }
 
 function ocultarSubmenus() {
-    ["submenuApariencia", "submenuPerfil", "submenuLectura", "submenuAjustes", "submenuAjustesVisuales", "submenuTexto", "submenuTecladoVirtual"].forEach(id => {
-        var el = document.getElementById(id);
-        if(el) el.style.display = "none";
+
+    SUBMENUS.forEach(id => {
+
+        const el = document.getElementById(id);
+
+        if (el) {
+            el.style.display = "none";
+        }
+
     });
+
 }
 
-function toggleMenu(){
-    var menu = document.getElementById("menuAccesibilidad");
-    var algunSubmenuAbierto = false;
-    ["submenuApariencia", "submenuPerfil", "submenuLectura", "submenuAjustes", "submenuAjustesVisuales", "submenuTexto", "submenuTecladoVirtual"].forEach(id => {
-        var el = document.getElementById(id);
-        if(el && el.style.display === "block") algunSubmenuAbierto = true;
+function toggleMenu() {
+
+    const menu = document.getElementById("menuAccesibilidad");
+
+    let algunSubmenuAbierto = false;
+
+    SUBMENUS.forEach(id => {
+
+        const el = document.getElementById(id);
+
+        if (el && el.style.display === "block") {
+            algunSubmenuAbierto = true;
+        }
+
     });
-    
-    if(menu.style.display === "flex" || algunSubmenuAbierto){
+
+    if (menu.style.display === "flex" || algunSubmenuAbierto) {
+
         menu.style.display = "none";
+
         ocultarSubmenus();
+
     } else {
+
         menu.style.display = "flex";
+
     }
+
 }
 
-function abrirSubmenu(idSubmenu) { ocultarSubmenus(); document.getElementById("menuAccesibilidad").style.display = "none"; document.getElementById(idSubmenu).style.display = "block"; }
+function abrirSubmenu(idSubmenu) {
+
+    ocultarSubmenus();
+
+    document.getElementById("menuAccesibilidad").style.display = "none";
+
+    document.getElementById(idSubmenu).style.display = "block";
+
+}
 function volverAlMenu() { ocultarSubmenus(); document.getElementById("menuAccesibilidad").style.display = "flex"; }
-function cerrarTodo() { ocultarSubmenus(); document.getElementById("menuAccesibilidad").style.display = "none"; }
+function cerrarFaro() {
+
+    marcarTourComoVisto();
+
+    const faroBox = document.getElementById("faroBox");
+
+    if (faroBox) {
+        faroBox.style.display = "none";
+    }
+
+}
 function empezarFaro(){
 
     marcarTourComoVisto();
@@ -691,63 +788,197 @@ function empezarFaro(){
 
 // TEXTO: Familia Tipográfica
 function cambiarFuente(tipo) {
-    document.body.classList.remove('faro-font-sans', 'faro-font-serif', 'faro-font-dyslexic');
-    if (tipo !== 'default') document.body.classList.add('faro-font-' + tipo);
+
+    faroState.fuente = tipo;
+
+    actualizarFuente();
+
     guardarPreferenciasBackend();
+
+}
+
+function actualizarFuente() {
+
+    document.body.classList.remove(
+        "faro-font-sans",
+        "faro-font-serif",
+        "faro-font-dyslexic"
+    );
+
+    if (faroState.fuente !== "default") {
+        document.body.classList.add("faro-font-" + faroState.fuente);
+    }
+
 }
 
 // TEXTO: Tamaño y Alineación UI interactiva
-function seleccionarTamano(elemento, claseCss) {
-    var pills = elemento.parentNode.querySelectorAll('.size-pill');
-    pills.forEach(pill => pill.classList.remove('active'));
-    elemento.classList.add('active');
-    
-    document.body.classList.remove('faro-text-small', 'faro-text-normal', 'faro-text-large');
-    if(claseCss !== 'faro-text-normal') document.body.classList.add(claseCss);
+function seleccionarTamano(elemento, tipo) {
+
+    elemento.parentNode
+        .querySelectorAll(".size-pill")
+        .forEach(p => p.classList.remove("active"));
+
+    elemento.classList.add("active");
+
+    faroState.tamanoTexto = tipo;
+
+    actualizarTamanoTexto();
+
+    guardarPreferenciasBackend();
+
 }
 
-function seleccionarAlineacion(elemento, claseCss) {
-    var pills = elemento.parentNode.querySelectorAll('.align-pill');
-    pills.forEach(pill => pill.classList.remove('active'));
-    elemento.classList.add('active');
-    
-    document.body.classList.remove('faro-align-left', 'faro-align-center', 'faro-align-right');
-    document.body.classList.add(claseCss);
+function actualizarTamanoTexto() {
+
+    document.body.classList.remove(
+        "faro-text-small",
+        "faro-text-normal",
+        "faro-text-large"
+    );
+
+    if (faroState.tamanoTexto !== "normal") {
+        document.body.classList.add("faro-text-" + faroState.tamanoTexto);
+    }
+
+}
+
+function seleccionarAlineacion(elemento, tipo) {
+
+    elemento.parentNode
+        .querySelectorAll(".align-pill")
+        .forEach(p => p.classList.remove("active"));
+
+    elemento.classList.add("active");
+
+    faroState.alineacion = tipo;
+
+    actualizarAlineacion();
+
+    guardarPreferenciasBackend();
+
+}
+
+function actualizarAlineacion() {
+
+    document.body.classList.remove(
+        "faro-align-left",
+        "faro-align-center",
+        "faro-align-right"
+    );
+
+    document.body.classList.add(
+        "faro-align-" + faroState.alineacion
+    );
+
 }
 
 // VISUALES: Filtros de imagen CSS (Brillo, Contraste, Saturación)
 function ajustarSlider(id, cambio) {
-    var slider = document.getElementById(id);
-    var val = parseInt(slider.value) + cambio;
-    if(val < 0) val = 0; if(val > 100) val = 100;
-    slider.value = val;
+
+    const slider = document.getElementById(id);
+
+    let valor = Number(slider.value) + cambio;
+
+    valor = Math.max(0, Math.min(100, valor));
+
+    slider.value = valor;
+
+    switch(id){
+
+        case "slider-brillo":
+            faroState.brillo = valor;
+            break;
+
+        case "slider-contraste":
+            faroState.contraste = valor;
+            break;
+
+        case "slider-saturacion":
+            faroState.saturacion = valor;
+            break;
+
+    }
+
     actualizarFiltros();
+
     guardarPreferenciasBackend();
+
 }
 
 function actualizarFiltros() {
-    var contraste = document.getElementById("slider-contraste").value;
-    var brillo = document.getElementById("slider-brillo").value;
-    var saturacion = document.getElementById("slider-saturacion").value;
-    
-    var c = contraste / 30;
-    var b = brillo / 50;
-    var s = saturacion / 40;
-    var grises = faroState.grises ? 'grayscale(100%)' : '';
 
-    document.documentElement.style.filter = `brightness(${b}) saturate(${s}) contrast(${c}) ${grises}`;
+    const brillo = faroState.brillo / 50;
+
+    const contraste = faroState.contraste / 30;
+
+    const saturacion = faroState.saturacion / 40;
+
+    const grises = faroState.grises
+        ? "grayscale(100%)"
+        : "";
+
+    document.documentElement.style.filter =
+        `brightness(${brillo})
+         saturate(${saturacion})
+         contrast(${contraste})
+         ${grises}`;
+
 }
 
 // VISUALES: Toggles (Switches y Checkboxes)
 function toggleFiltroFijo(tipo) {
-    if(tipo === 'grayscale') { faroState.grises = document.getElementById("check-grayscale").checked; }
+
+    switch(tipo){
+
+        case "grayscale":
+            faroState.grises =
+                document.getElementById("check-grayscale").checked;
+            break;
+
+    }
+
     actualizarFiltros();
+
     guardarPreferenciasBackend();
+
 }
 
-function toggleClase(checkbox, claseCss) {
-    if(checkbox.checked) { document.body.classList.add(claseCss); } else { document.body.classList.remove(claseCss); }
+function toggleClase(checkbox, tipo){
+
+    switch(tipo){
+
+        case "altoContraste":
+            faroState.altoContraste = checkbox.checked;
+            actualizarContraste();
+            break;
+
+        case "modoOscuro":
+            faroState.modoOscuro = checkbox.checked;
+            actualizarModoOscuro();
+            break;
+
+    }
+
     guardarPreferenciasBackend();
+
+}
+
+function actualizarContraste(){
+
+    document.body.classList.toggle(
+        "faro-high-contrast",
+        faroState.altoContraste
+    );
+
+}
+
+function actualizarModoOscuro(){
+
+    document.body.classList.toggle(
+        "faro-dark-mode",
+        faroState.modoOscuro
+    );
+
 }
 
 // LECTURA: Asistencia de Voz
@@ -767,66 +998,159 @@ document.addEventListener('click', function(e) {
 });
 
 // POSICION BOTÓN
-function togglePosicion() {
-    var btn = document.getElementById("btnFlotante");
-    var menuPrincipal = document.getElementById("menuAccesibilidad");
-    var faroBox = document.getElementById("faroBox");
-    var subMenus = document.querySelectorAll(".sub-menu-container");
+function togglePosicion(){
 
-    if (btn.style.left === "20px") {
-        btn.style.left = ""; btn.style.right = "20px";
-        menuPrincipal.style.left = ""; menuPrincipal.style.right = "20px";
-        faroBox.style.left = ""; faroBox.style.right = "25px";
-        subMenus.forEach(s => { s.style.left = ""; s.style.right = "20px"; });
-    } else {
-        btn.style.right = ""; btn.style.left = "20px";
-        menuPrincipal.style.right = ""; menuPrincipal.style.left = "20px";
-        faroBox.style.right = ""; faroBox.style.left = "25px";
-        subMenus.forEach(s => { s.style.right = ""; s.style.left = "20px"; });
-    }
+    faroState.posicionBoton =
+        faroState.posicionBoton === "right"
+            ? "left"
+            : "right";
+
+    actualizarPosicionBoton();
+
     guardarPreferenciasBackend();
+
+}
+
+function actualizarPosicionBoton(){
+
+    const izquierda = faroState.posicionBoton === "left";
+
+    const btn = document.getElementById("btnFlotante");
+    const menu = document.getElementById("menuAccesibilidad");
+    const box = document.getElementById("faroBox");
+
+    if(!btn || !menu || !box) return;
+
+    btn.style.left = izquierda ? "20px" : "";
+    btn.style.right = izquierda ? "" : "20px";
+
+    menu.style.left = izquierda ? "20px" : "";
+    menu.style.right = izquierda ? "" : "20px";
+
+    box.style.left = izquierda ? "25px" : "";
+    box.style.right = izquierda ? "" : "25px";
+
 }
 
 // PERFILES RÁPIDOS (Actualizados con las nuevas tarjetas)
 function aplicarPerfil(perfil) {
-    document.body.className = ''; 
-    document.documentElement.style.filter = '';
-    faroState.grises = false;
-    document.getElementById("check-grayscale").checked = false;
-    document.getElementById("check-high-contrast").checked = false;
-    document.getElementById("check-dark-mode").checked = false;
-    document.getElementById("check-voice").checked = false;
+
+    // Guardar perfil seleccionado
+    faroState.perfil = perfil;
+
+
+    // Reset general
     faroState.voz = false;
 
+    faroState.volumenVoz = 100;
+    faroState.velocidadVoz = 50;
+
+
+    faroState.grises = false;
+
+    faroState.altoContraste = false;
+
+    faroState.modoOscuro = false;
+
+
+    faroState.fuente = "default";
+
+    faroState.tamanoTexto = "normal";
+
+    faroState.alineacion = "left";
+
+
+    faroState.brillo = 50;
+
+    faroState.contraste = 50;
+
+    faroState.saturacion = 50;
+
+
+
     switch(perfil) {
-        case 'color':
-            document.getElementById("check-grayscale").checked = true;
+
+
+        // Sensibilidad al color
+        case "color":
+
             faroState.grises = true;
-            actualizarFiltros();
+
             break;
-        case 'voz':
-            document.getElementById("check-voice").checked = true;
+
+
+
+        // Lector de pantalla / asistencia voz
+        case "voz":
+
             faroState.voz = true;
+
             break;
-        case 'fuentes':
-            document.body.classList.add('faro-font-dyslexic', 'faro-text-large');
+
+
+
+        // Dificultad de lectura
+        case "fuentes":
+
+            faroState.fuente = "dyslexic";
+
+            faroState.tamanoTexto = "large";
+
             break;
-        case 'seguridad':
-            document.getElementById("slider-brillo").value = 30; // Baja el brillo
-            document.getElementById("slider-saturacion").value = 20; // Baja la saturación
-            actualizarFiltros();
+
+
+
+        // Baja estimulación visual
+        case "seguridad":
+
+            faroState.brillo = 30;
+
+            faroState.saturacion = 20;
+
+            faroState.contraste = 40;
+
             break;
-        case 'visibilidad':
-            document.body.classList.add('faro-high-contrast', 'faro-text-large');
-            document.getElementById("check-high-contrast").checked = true;
+
+
+
+        // Baja visión
+        case "visibilidad":
+
+            faroState.altoContraste = true;
+
+            faroState.tamanoTexto = "large";
+
             break;
-        case 'enfoque':
-            document.body.classList.add('faro-dark-mode');
-            document.getElementById("check-dark-mode").checked = true;
+
+
+
+        // Concentración
+        case "enfoque":
+
+            faroState.modoOscuro = true;
+
+            faroState.tamanoTexto = "large";
+
             break;
+
     }
+
+
+
+    // Aplicar cambios reales al navegador
+    aplicarEstado();
+
+
+    // Refrescar botones, switches, sliders
+    sincronizarControles();
+
+
     cerrarTodo();
+
+
+    // Guardar en backend
     guardarPreferenciasBackend();
+
 }
 
 // Secuencia de Onboarding del Faro
@@ -844,98 +1168,289 @@ setTimeout(function() {
         }
     });
 }, 12000);
+
 /* =========================================
-   BACKEND FARO
+   BACKEND FARO (API v1)
 ========================================= */
 
-const API = window.FARO_CONFIG?.backend || "";
+const API = window.FARO_CONFIG?.backendUrl || "";
 
-async function obtenerConfiguracion() {
+let FARO_TOKEN = sessionStorage.getItem("FARO_TOKEN") || null;
 
-    if (!API) return;
+
+/**
+ * Obtener JWT FARO desde backend
+ */
+async function autenticarFaro() {
+
+    if (FARO_TOKEN) return;
+
+
+    const r = await fetch(API + "/tool/token", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+            moodle_user_sub: window.FARO_CONFIG.userId,
+
+            moodle_course_id:
+                window.FARO_CONFIG.courseId,
+
+            moodleUrl:
+                window.FARO_CONFIG.moodleUrl
+
+        })
+
+    });
+
+
+    if(!r.ok){
+
+        throw new Error(
+            "No se pudo autenticar FARO"
+        );
+
+    }
+
+
+    const data = await r.json();
+
+
+    FARO_TOKEN = data.session_token;
+
+
+    sessionStorage.setItem(
+        "FARO_TOKEN",
+        FARO_TOKEN
+    );
+
+}
+
+
+
+/**
+ * Fetch autenticado
+ */
+async function apiFetch(url, options = {}) {
+
+
+    await autenticarFaro();
+
+
+    options.headers = {
+
+        ...(options.headers || {}),
+
+        Authorization:
+            `Bearer ${FARO_TOKEN}`,
+
+        "Content-Type":
+            "application/json"
+
+    };
+
+
+    return fetch(
+        API + url,
+        options
+    );
+
+}
+
+
+
+/**
+ * Cargar usuario y preferencias
+ */
+async function obtenerConfiguracion(){
 
     try {
 
-        const r = await fetch(API + "/config");
 
-        if (!r.ok) return;
+        const r =
+            await apiFetch("/api/v1/users/me");
 
-        const config = await r.json();
 
-        console.log("Configuración FARO:", config);
+        if(!r.ok)
+            return null;
 
-    } catch (e) {
 
-        console.warn("No se pudo cargar la configuración");
+        const datos =
+            await r.json();
+
+
+        console.log(
+            "Configuración FARO:",
+            datos
+        );
+
+
+        return datos;
+
+
+    }catch(e){
+
+        console.error(
+            "Error configuración FARO",
+            e
+        );
+
+        return null;
 
     }
 
 }
 
-async function guardarPreferenciasBackend() {
 
-    if (!API) return;
+
+/**
+ * Guardar preferencias
+ */
+async function guardarPreferenciasBackend(){
 
     try {
 
-        await fetch(API + "/preferences", {
 
-            method: "POST",
+        const preferencias = {
 
-            headers: {
-                "Content-Type": "application/json"
-            },
 
-            body: JSON.stringify(faroState)
+            contrast_mode:
+                faroState.altoContraste,
 
-        });
 
-    } catch (e) {
+            dark_mode:
+                faroState.modoOscuro,
 
-        console.warn("No se pudieron guardar preferencias");
+
+            font_family:
+                faroState.fuente,
+
+
+            font_size:
+                faroState.tamanoTexto,
+
+
+            alignment:
+                faroState.alineacion,
+
+
+            brightness:
+                faroState.brillo,
+
+
+            contrast:
+                faroState.contraste,
+
+
+            saturation:
+                faroState.saturacion,
+
+
+            grayscale:
+                faroState.grises,
+
+
+            voice:
+                faroState.voz,
+
+
+            voice_speed:
+                faroState.velocidadVoz,
+
+
+            voice_volume:
+                faroState.volumenVoz
+
+
+        };
+
+
+        await apiFetch(
+            "/api/v1/users/me/accessibility",
+            {
+
+                method:"PATCH",
+
+                body:
+                    JSON.stringify(preferencias)
+
+            }
+        );
+
+
+    }catch(e){
+
+        console.error(
+            "Error guardando FARO",
+            e
+        );
 
     }
 
 }
 
-async function cargarPreferenciasBackend() {
 
-    if (!API) return;
+
+/**
+ * Recuperar preferencias
+ */
+async function cargarPreferenciasBackend(){
 
     try {
 
-        const r = await fetch(API + "/preferences");
 
-        if (!r.ok) return;
+        const datos =
+            await obtenerConfiguracion();
 
-        const datos = await r.json();
 
-        Object.assign(faroState, datos);
+        if(!datos)
+            return;
+
+
+
+        const settings =
+            datos.accessibility_settings;
+
+
+
+        if(settings){
+
+
+            faroState.altoContraste =
+                settings.contrast_mode ?? false;
+
+
+            faroState.fuente =
+                settings.font_family ?? "default";
+
+
+            faroState.tamanoTexto =
+                settings.font_size ?? "normal";
+
+
+        }
+
 
         aplicarEstado();
 
-    } catch (e) {
 
-        console.warn("No se pudieron cargar preferencias");
+        sincronizarControles();
+
+
+
+    }catch(e){
+
+        console.error(
+            "Error cargando FARO",
+            e
+        );
 
     }
-
-}
-function aplicarEstado(){
-
-    actualizarFiltros();
-
-    document.getElementById("check-grayscale").checked =
-        faroState.grises;
-
-    document.getElementById("check-voice").checked =
-        faroState.voz;
-
-    document.getElementById("slider-velocidad").value =
-        faroState.velocidadVoz;
-
-    document.getElementById("slider-volumen").value =
-        faroState.volumenVoz;
 
 }
 /* =========================================
@@ -944,41 +1459,82 @@ function aplicarEstado(){
 
 async function iniciarFaro() {
 
-    // Si ya vio el tour, no volver a mostrarlo
-    if (tourYaVisto()) {
 
-        cerrarFaro();
+    try {
+
+
+        // Cargar preferencias guardadas
+        await cargarPreferenciasBackend();
+
+
+        // Aplicar estado actual al navegador
+        aplicarEstado();
+
+
+        // Sincronizar botones, checks y sliders
+        sincronizarControles();
+
+
+
+        // Si ya vio el tour, ocultarlo
+        if (tourYaVisto()) {
+
+            cerrarFaro();
+
+        }
+
+
+
+    } catch(e) {
+
+        console.error(
+            "Error iniciando FARO:",
+            e
+        );
 
     }
 
-    // Cargar configuración del backend
-    await obtenerConfiguracion();
-
-    // Cargar preferencias guardadas
-    await cargarPreferenciasBackend();
-
-    // Aplicar estado actual
-    aplicarEstado();
 
 }
-// Esta función se ejecuta automáticamente gracias al js_init_call de PHP
-function init_mi_plugin(Y, backendUrl) {
-    
-    // Ahora puedes usar 'backendUrl' de forma dinámica
-    console.log("Conectando al backend en: " + backendUrl);
 
-    // Ejemplo de petición Fetch a tu Node.js en Render
-    fetch(`${backendUrl}/tus-rutas-de-node`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Datos recibidos de Render:", data);
-        // Aquí manejas tu HTML con los datos recibidos
-    })
-    .catch(error => console.error("Error de conexión:", error));
+
+
+/*
+    Inicialización desde Moodle
+*/
+function init_mi_plugin(Y, backendUrl) {
+
+
+    console.log(
+        "Conectando FARO con:",
+        backendUrl
+    );
+
+
+    /*
+       Guardamos configuración dinámica
+       que viene desde Moodle
+    */
+
+    if(!window.FARO_CONFIG){
+
+        window.FARO_CONFIG = {};
+
+    }
+
+
+    window.FARO_CONFIG.backendUrl =
+        backendUrl;
+
+
+
+    /*
+       Arranca FARO cuando Moodle
+       termina de cargar
+    */
+
+    iniciarFaro();
+
+
 }
 </script>
