@@ -315,6 +315,10 @@
     font-weight: bold; 
     color: var(--faro-text); 
 }
+body.faro-font-dyslexic,
+body.faro-font-dyslexic *:not(#faro-extension-root *) {
+    font-family:'Open Dyslexic', Arial, sans-serif !important;
+}
 </style>
 
 <div id="faro-extension-root">
@@ -480,20 +484,20 @@
             </div>
             <div style="background: var(--faro-bg-card); border: 1px solid var(--faro-border); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 10px; font-weight: 700; color: var(--faro-primary);">Usar asistencia</span>
-                <label class="sub-switch"><input type="checkbox" id="check-voice" onchange="faroState.voz = this.checked"><span class="sub-slider sub-round"></span></label>
+                <label class="sub-switch"><input type="checkbox" id="check-voice" onchange="faroState.voz = this.checked; guardarPreferenciasBackend();"><span class="sub-slider sub-round"></span></label>
             </div>
         </div>
         <div class="sub-setting-row">
             <div class="sub-item-text"><h3>Velocidad de lectura</h3><p>Ajusta la rapidez</p></div>
             <div class="sub-slider-control" style="justify-content: space-between; font-size: 9px; font-weight: bold; color: var(--faro-muted);">
-                <span>Lenta</span><input type="range" id="voice-speed" min="0" max="100" value="50" oninput="faroState.velocidadVoz = this.value" style="margin: 0 10px;"><span>Rápida</span>
+                <span>Lenta</span><input type="range" id="voice-speed" min="0" max="100" value="50" oninput="faroState.velocidadVoz = this.value; guardarPreferenciasBackend()" style="margin: 0 10px;"><span>Rápida</span>
             </div>
         </div>
         <div class="sub-setting-row">
             <div class="sub-item-text"><h3>Volumen</h3><p>Nivel de salida de audio</p></div>
             <div class="sub-slider-control" style="justify-content: space-between; color: var(--faro-primary);">
                 <span class="material-symbols-outlined" style="font-size: 20px;">volume_down</span>
-                <input type="range" id="voice-volume" min="0" max="100" value="100" oninput="faroState.volumenVoz = this.value" style="margin: 0 10px;">
+                <input type="range" id="voice-volume" min="0" max="100" value="100" oninput="faroState.volumenVoz = this.value; guardarPreferenciasBackend()" style="margin: 0 10px;">
                 <span class="material-symbols-outlined" style="font-size: 20px;">volume_up</span>
             </div>
         </div>
@@ -591,7 +595,7 @@
 /* =========================================
    ESTADO GLOBAL
 ========================================= */
-
+console.log("🔥 FARO JS CARGADO");
 const faroState = {
 
     // Lectura
@@ -631,7 +635,7 @@ function aplicarEstado() {
 
     actualizarAlineacion();
 
-    actualizarFiltros();
+    actualizarFiltros(false);
 
     actualizarContraste();
 
@@ -686,9 +690,12 @@ function tourYaVisto() {
         }
         
         /* Modo Oscuro */
-        body.faro-dark-mode, body.faro-dark-mode *:not(#faro-extension-root *) {
-            background-color: #121212 !important; color: #e0e0e0 !important; border-color: #333 !important;
-        }
+        body.faro-dark-mode,
+        body.faro-dark-mode * {
+            background-color:#121212 !important;
+            color:#e0e0e0 !important;
+            border-color:#333 !important;
+        }      
     `;
     document.head.appendChild(style);
 })();
@@ -762,15 +769,15 @@ function abrirSubmenu(idSubmenu) {
 
 }
 function volverAlMenu() { ocultarSubmenus(); document.getElementById("menuAccesibilidad").style.display = "flex"; }
-function cerrarFaro() {
+function cerrarTodo(){
 
-    marcarTourComoVisto();
+    ocultarSubmenus();
 
-    const faroBox = document.getElementById("faroBox");
+    const menu =
+        document.getElementById("menuAccesibilidad");
 
-    if (faroBox) {
-        faroBox.style.display = "none";
-    }
+    if(menu)
+        menu.style.display="none";
 
 }
 function empezarFaro(){
@@ -905,37 +912,88 @@ function ajustarSlider(id, cambio) {
 
 }
 
-function actualizarFiltros() {
+function actualizarFiltros(guardar = true) {
 
-    const brillo = faroState.brillo / 50;
 
-    const contraste = faroState.contraste / 30;
+    if(guardar){
 
-    const saturacion = faroState.saturacion / 40;
+        const brilloSlider =
+            document.getElementById("slider-brillo");
 
-    const grises = faroState.grises
+        const contrasteSlider =
+            document.getElementById("slider-contraste");
+
+        const saturacionSlider =
+            document.getElementById("slider-saturacion");
+
+
+        if(brilloSlider)
+            faroState.brillo =
+                Number(brilloSlider.value);
+
+
+        if(contrasteSlider)
+            faroState.contraste =
+                Number(contrasteSlider.value);
+
+
+        if(saturacionSlider)
+            faroState.saturacion =
+                Number(saturacionSlider.value);
+
+    }
+
+
+    const brillo =
+        faroState.brillo / 50;
+
+    const contraste =
+        faroState.contraste / 30;
+
+    const saturacion =
+        faroState.saturacion / 40;
+
+
+    const grises =
+        faroState.grises
         ? "grayscale(100%)"
         : "";
 
-    document.documentElement.style.filter =
-        `brightness(${brillo})
-         saturate(${saturacion})
-         contrast(${contraste})
-         ${grises}`;
+
+    document.body.style.filter =
+    `
+    brightness(${brillo})
+    saturate(${saturacion})
+    contrast(${contraste})
+    ${grises}
+    `;
+
+
+    if(guardar){
+        guardarPreferenciasBackend();
+    }
 
 }
 
 // VISUALES: Toggles (Switches y Checkboxes)
 function toggleFiltroFijo(tipo) {
 
-    switch(tipo){
+    if(tipo === "grayscale") {
 
-        case "grayscale":
-            faroState.grises =
-                document.getElementById("check-grayscale").checked;
-            break;
+        faroState.grises =
+            document.getElementById("check-grayscale").checked;
+
+    } else {
+
+        console.warn(
+            "Filtro FARO no reconocido:",
+            tipo
+        );
+
+        return;
 
     }
+
 
     actualizarFiltros();
 
@@ -947,14 +1005,21 @@ function toggleClase(checkbox, tipo){
 
     switch(tipo){
 
-        case "altoContraste":
-            faroState.altoContraste = checkbox.checked;
-            actualizarContraste();
-            break;
-
         case "modoOscuro":
+        case "faro-dark-mode":
+
             faroState.modoOscuro = checkbox.checked;
             actualizarModoOscuro();
+
+            break;
+
+
+        case "altoContraste":
+        case "faro-high-contrast":
+
+            faroState.altoContraste = checkbox.checked;
+            actualizarContraste();
+
             break;
 
     }
@@ -978,6 +1043,89 @@ function actualizarModoOscuro(){
         "faro-dark-mode",
         faroState.modoOscuro
     );
+
+}
+
+function sincronizarControles(){
+
+    const dark =
+        document.getElementById("check-dark-mode");
+
+    if(dark)
+        dark.checked = faroState.modoOscuro;
+
+
+
+    const contrast =
+        document.getElementById("check-high-contrast");
+
+    if(contrast)
+        contrast.checked =
+            faroState.altoContraste;
+
+
+
+    const gray =
+        document.getElementById("check-grayscale");
+
+    if(gray)
+        gray.checked =
+            faroState.grises;
+
+
+
+    const voice =
+        document.getElementById("check-voice");
+
+    if(voice)
+        voice.checked =
+            faroState.voz;
+
+
+
+    const brillo =
+        document.getElementById("slider-brillo");
+
+    if(brillo)
+        brillo.value =
+            faroState.brillo;
+
+
+
+    const contraste =
+        document.getElementById("slider-contraste");
+
+    if(contraste)
+        contraste.value =
+            faroState.contraste;
+
+
+
+    const saturacion =
+        document.getElementById("slider-saturacion");
+
+    if(saturacion)
+        saturacion.value =
+            faroState.saturacion;
+
+
+
+    const velocidad =
+        document.getElementById("voice-speed");
+
+    if(velocidad)
+        velocidad.value =
+            faroState.velocidadVoz;
+
+
+
+    const volumen =
+        document.getElementById("voice-volume");
+
+    if(volumen)
+        volumen.value =
+            faroState.volumenVoz;
+
 
 }
 
@@ -1029,6 +1177,30 @@ function actualizarPosicionBoton(){
 
     box.style.left = izquierda ? "25px" : "";
     box.style.right = izquierda ? "" : "25px";
+
+}
+
+function cambiarVelocidadVoz(valor){
+
+    faroState.velocidadVoz = valor;
+
+    guardarPreferenciasBackend();
+
+}
+
+function cambiarVolumenVoz(valor){
+
+    faroState.volumenVoz = valor;
+
+    guardarPreferenciasBackend();
+
+}
+
+function toggleVoz(checkbox){
+
+    faroState.voz = checkbox.checked;
+
+    guardarPreferenciasBackend();
 
 }
 
@@ -1173,40 +1345,77 @@ setTimeout(function() {
    BACKEND FARO (API v1)
 ========================================= */
 
-const API = window.FARO_CONFIG?.backendUrl || "";
+function getAPI(){
+
+    return window.FARO_CONFIG?.backendUrl || "";
+
+}
 
 let FARO_TOKEN = sessionStorage.getItem("FARO_TOKEN") || null;
 
 
+console.log("FARO CONFIG:", window.FARO_CONFIG);
+console.log("API BACKEND:",getAPI());
 /**
  * Obtener JWT FARO desde backend
  */
 async function autenticarFaro() {
+    console.log("FARO CONFIG:", window.FARO_CONFIG);
 
-    if (FARO_TOKEN) return;
+
+    const token =
+        sessionStorage.getItem("FARO_TOKEN");
 
 
-    const r = await fetch(API + "/tool/token", {
+    const exp =
+        sessionStorage.getItem("FARO_TOKEN_EXP");
 
-        method: "POST",
 
-        headers: {
-            "Content-Type": "application/json"
-        },
+    if(token && exp){
 
-        body: JSON.stringify({
+        const ahora =
+            Math.floor(Date.now()/1000);
 
-            moodle_user_sub: window.FARO_CONFIG.userId,
 
-            moodle_course_id:
-                window.FARO_CONFIG.courseId,
+        if(ahora < Number(exp)){
 
-            moodleUrl:
-                window.FARO_CONFIG.moodleUrl
+            FARO_TOKEN = token;
 
-        })
+            return token;
 
-    });
+        }
+
+    }
+
+
+    console.log("Generando nuevo JWT FARO");
+
+
+    const r = await fetch(
+        getAPI() + "/tool/token",
+        {
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+
+                moodle_user_sub:
+                    window.FARO_CONFIG.userId,
+
+                moodle_course_id:
+                    window.FARO_CONFIG.courseId,
+
+                moodleUrl:
+                    window.FARO_CONFIG.moodleUrl
+
+            })
+
+        }
+    );
 
 
     if(!r.ok){
@@ -1218,10 +1427,14 @@ async function autenticarFaro() {
     }
 
 
-    const data = await r.json();
+    const data =
+        await r.json();
+
+    console.log("TOKEN RESPONSE:", data);
 
 
-    FARO_TOKEN = data.session_token;
+    FARO_TOKEN =
+        data.session_token;
 
 
     sessionStorage.setItem(
@@ -1229,36 +1442,113 @@ async function autenticarFaro() {
         FARO_TOKEN
     );
 
+
+    /*
+       leer expiración del JWT
+    */
+
+    const payload =
+        JSON.parse(
+            atob(
+                FARO_TOKEN.split(".")[1]
+            )
+        );
+
+
+    sessionStorage.setItem(
+        "FARO_TOKEN_EXP",
+        payload.exp
+    );
+
+
+    return FARO_TOKEN;
+
 }
+
 
 
 
 /**
  * Fetch autenticado
  */
-async function apiFetch(url, options = {}) {
+async function apiFetch(url, options={}){
 
 
-    await autenticarFaro();
+    const token =
+        await autenticarFaro();
 
 
-    options.headers = {
+    const response =
+        await fetch(
+            getAPI() + url,
+            {
 
-        ...(options.headers || {}),
+                ...options,
 
-        Authorization:
-            `Bearer ${FARO_TOKEN}`,
+                headers:{
 
-        "Content-Type":
-            "application/json"
+                    ...(options.headers || {}),
 
-    };
+                    Authorization:
+                        `Bearer ${token}`,
+
+                    "Content-Type":
+                        "application/json"
+
+                }
+
+            }
+        );
 
 
-    return fetch(
-        API + url,
-        options
-    );
+    /*
+       Si el JWT venció
+    */
+    if(response.status === 401){
+
+        console.warn(
+            "JWT vencido. Renovando sesión FARO"
+        );
+
+
+        sessionStorage.removeItem(
+            "FARO_TOKEN"
+        );
+
+
+        FARO_TOKEN = null;
+
+
+        // vuelve a pedir token nuevo
+        const nuevoToken =
+            await autenticarFaro();
+
+
+        return fetch(
+            getAPI() + url,
+            {
+
+                ...options,
+
+                headers:{
+
+                    ...(options.headers || {}),
+
+                    Authorization:
+                        `Bearer ${nuevoToken}`,
+
+                    "Content-Type":
+                        "application/json"
+
+                }
+
+            }
+        );
+
+    }
+
+
+    return response;
 
 }
 
@@ -1269,23 +1559,36 @@ async function apiFetch(url, options = {}) {
  */
 async function obtenerConfiguracion(){
 
+    console.log("➡️ Entrando obtenerConfiguracion");
+
+
     try {
 
-
-        const r =
-            await apiFetch("/api/v1/users/me");
-
-
-        if(!r.ok)
-            return null;
-
-
-        const datos =
-            await r.json();
+        const r = await apiFetch(
+            "/api/v1/users/me/accessibility"
+        );
 
 
         console.log(
-            "Configuración FARO:",
+            "STATUS CONFIG:",
+            r.status
+        );
+
+
+        const texto = await r.text();
+
+
+        console.log(
+            "RESPUESTA RAW:",
+            texto
+        );
+
+
+        const datos = JSON.parse(texto);
+
+
+        console.log(
+            "RESPUESTA COMPLETA CONFIG:",
             datos
         );
 
@@ -1312,11 +1615,20 @@ async function obtenerConfiguracion(){
  * Guardar preferencias
  */
 async function guardarPreferenciasBackend(){
+    if(!FARO_READY){
+    console.warn(
+        "FARO todavía no está listo, no guardo preferencias"
+    );
+    return;
+}
 
     try {
 
 
         const preferencias = {
+
+            button_position:
+                faroState.posicionBoton,
 
 
             contrast_mode:
@@ -1368,6 +1680,7 @@ async function guardarPreferenciasBackend(){
 
 
         };
+        console.log("📡 ENVIANDO PREFERENCIAS FARO:", preferencias);
 
 
         await apiFetch(
@@ -1403,28 +1716,37 @@ async function cargarPreferenciasBackend(){
 
     try {
 
-
-        const datos =
-            await obtenerConfiguracion();
+        const datos = await obtenerConfiguracion();
 
 
         if(!datos)
             return;
 
 
-
-        const settings =
-            datos.accessibility_settings;
-
+        const settings = datos.accessibility_settings;
 
 
         if(settings){
 
+            faroState.posicionBoton =
+                settings.button_position ?? "right";
 
+
+            // Visual
             faroState.altoContraste =
                 settings.contrast_mode ?? false;
 
 
+            faroState.modoOscuro =
+                settings.dark_mode ?? false;
+
+
+            faroState.grises =
+                settings.grayscale ?? false;
+
+
+
+            // Texto
             faroState.fuente =
                 settings.font_family ?? "default";
 
@@ -1432,6 +1754,46 @@ async function cargarPreferenciasBackend(){
             faroState.tamanoTexto =
                 settings.font_size ?? "normal";
 
+
+            faroState.alineacion =
+                settings.alignment ?? "left";
+
+
+
+            // Filtros visuales
+
+            faroState.brillo =
+                settings.brightness ?? 50;
+
+
+            faroState.contraste =
+                settings.contrast ?? 50;
+
+
+            faroState.saturacion =
+                settings.saturation ?? 50;
+
+
+
+            // Voz
+
+            faroState.voz =
+                settings.voice ?? false;
+
+
+            faroState.velocidadVoz =
+                settings.voice_speed ?? 50;
+
+
+            faroState.volumenVoz =
+                settings.voice_volume ?? 100;
+
+
+
+            console.log(
+                "Preferencias FARO cargadas:",
+                faroState
+            );
 
         }
 
@@ -1456,33 +1818,19 @@ async function cargarPreferenciasBackend(){
 /* =========================================
    INICIALIZACIÓN FARO
 ========================================= */
+let FARO_READY = false;
 
 async function iniciarFaro() {
 
-
     try {
 
-
-        // Cargar preferencias guardadas
         await cargarPreferenciasBackend();
 
+        FARO_READY = true;
 
-        // Aplicar estado actual al navegador
-        aplicarEstado();
-
-
-        // Sincronizar botones, checks y sliders
-        sincronizarControles();
-
-
-
-        // Si ya vio el tour, ocultarlo
         if (tourYaVisto()) {
-
             cerrarFaro();
-
         }
-
 
 
     } catch(e) {
@@ -1494,7 +1842,6 @@ async function iniciarFaro() {
 
     }
 
-
 }
 
 
@@ -1502,39 +1849,32 @@ async function iniciarFaro() {
 /*
     Inicialización desde Moodle
 */
-function init_mi_plugin(Y, backendUrl) {
+async function init_mi_plugin(Y, backendUrl) {
+
+    console.log("🚀 INIT FARO EJECUTADO");
+
+
+    window.FARO_CONFIG ??= {};
+
+
+    window.FARO_CONFIG.backendUrl = backendUrl;
 
 
     console.log(
-        "Conectando FARO con:",
-        backendUrl
+        "CONFIG COMPLETA FARO DESPUÉS:",
+        window.FARO_CONFIG
     );
 
 
-    /*
-       Guardamos configuración dinámica
-       que viene desde Moodle
-    */
-
-    if(!window.FARO_CONFIG){
-
-        window.FARO_CONFIG = {};
-
-    }
+    await iniciarFaro();
 
 
-    window.FARO_CONFIG.backendUrl =
-        backendUrl;
-
-
-
-    /*
-       Arranca FARO cuando Moodle
-       termina de cargar
-    */
-
-    iniciarFaro();
-
+    console.log("🔥 FARO INICIALIZADO COMPLETO");
 
 }
+window.init_mi_plugin = init_mi_plugin;
+console.log(
+    "🔥 FARO JS FINALIZADO",
+    typeof window.init_mi_plugin
+);
 </script>
